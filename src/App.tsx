@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
@@ -6,46 +6,89 @@ import './App.css'
 type RectangleProps = {
   x: number,
   y: number,
+  vX?: number,
+  vY?: number,
   width: number,
   height: number,
   color: string
 }
 
 function App() {
-  
+
   const [count, setCount] = useState(0)
 
+  const [ isPaused, setIsPaused ] = useState(true)
+
   const [ball, setBall] = useState<RectangleProps>({
-    x: 0,
-    y: 190,
+    x: 150,
+    y: 100,
+    vX: 0,
+    vY: 0,
     width: 50,
     height: 50,
     color: "orange"
   })
 
   const [p1, setP1] = useState<RectangleProps>({
-    x: 70,
+    x: 50,
     y: 100,
     width: 50,
-    height: 100,
+    height: 200,
     color: "green"
   })
 
   const [p2, setP2] = useState<RectangleProps>({
-    x: 200,
+    x: 300,
     y: 130,
     width: 50,
-    height: 100,
+    height: 200,
     color: "red"
   })
 
-  function moveBall(dx: number, dy: number) {
-    const newBallPos = {
-      ...ball,
-      x: ball.x + dx,
-      y: ball.y + dy,
+  //At "Play", init ball with random velocity
+  useEffect(() => {
+    const rx = Math.random() > 0.5 ? 20 : -20     //Or 20, or -20 (don't go straight up/down)
+    const ry = Math.random() > 0.5
+      ? (Math.random() * (50 - 5) + 5)            //Or between 50 to 5,
+      : (Math.random() * ((-5) - (-50)) + (-5))   //or between -5 to -50 (don't go straight left/right)
+    // const ry = 5
+    if (
+      !isPaused && 
+      ball.vX == 0 && 
+      ball.vY == 0
+    ) {
+      setBall({
+        ...ball,
+        vX: rx,
+        vY: ry
+      })
     }
-    setBall(newBallPos)
+  }, [isPaused])
+
+  //Each time the ball moves, wait a time interval and change the ball position again
+  useEffect(() => {
+    const interval = setInterval(() => {
+      moveBall(ball.vX!, ball.vY!)
+    }, 200) //ms
+    return () => clearInterval(interval)
+  }, [ball, isPaused])
+
+  function moveBall(dx: number, dy: number) {
+    if (!isPaused) {
+      setBall({
+        ...ball,
+        x: ball.x + dx,
+        y: ball.y + dy,
+      })
+    }
+  }
+
+  function movePlayer(playerId: string, newPos: number) {
+    if (playerId == "P1") {
+      setP1({...p1, y: newPos})
+    } else {
+      setP2({...p2, y: newPos})
+    }
   }
 
   function isColliding(obj1: RectangleProps, obj2: RectangleProps) {
@@ -73,10 +116,17 @@ function App() {
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
         </button>
+
         <button onClick={() => moveBall(0, -10)}>Up</button>
         <button onClick={() => moveBall(0, 10)}>Down</button>
         <button onClick={() => moveBall(-10, 0)}>Left</button>
         <button onClick={() => moveBall(10, 0)}>Right</button>
+
+        <button onClick={() => setIsPaused(!isPaused)}>Play/Pause</button>
+
+        <button onClick={() => movePlayer("P1", Math.random() * 500)}>Move P1</button>
+        <button onClick={() => movePlayer("P2", Math.random() * 500)}>Move P2</button>
+
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
@@ -88,6 +138,7 @@ function App() {
       {/* Ball */}
       <div style={{
         position: "absolute",
+        transition: "0.5s",
         top: ball.y, 
         left: ball.x, 
         width: ball.width, 
@@ -98,6 +149,7 @@ function App() {
       {/* Player 1 */}
       <div style={{
         position: "absolute",
+        transition: "0.5s",
         top: p1.y, 
         left: p1.x, 
         width: p1.width, 
@@ -108,6 +160,7 @@ function App() {
       {/* Player 2 */}
       <div style={{
         position: "absolute",
+        transition: "0.5s",
         top: p2.y, 
         left: p2.x, 
         width: p2.width, 
