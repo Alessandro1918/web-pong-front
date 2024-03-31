@@ -4,10 +4,10 @@ import viteLogo from '/vite.svg'
 import './App.css'
 
 type RectangleProps = {
-  x: number,
-  y: number,
-  vX?: number,
-  vY?: number,
+  x: number,      //pos at X axis 
+  y: number,      //pos at Y axis
+  dx?: number,    //speed at X axis
+  dy?: number,    //spreed at Y axis
   width: number,
   height: number,
   color: string
@@ -22,8 +22,8 @@ function App() {
   const [ball, setBall] = useState<RectangleProps>({
     x: 150,
     y: 100,
-    vX: 0,
-    vY: 0,
+    dx: 0,
+    dy: 0,
     width: 50,
     height: 50,
     color: "orange"
@@ -45,31 +45,72 @@ function App() {
     color: "red"
   })
 
-  //At "Play", init ball with random velocity
+  const upperWall = {
+    x: 0,
+    y: 0,
+    width: 1000,
+    height: 5,
+    color: "blue"
+  }
+
+  const lowerWall = {
+    x: 0,
+    y: 500 - 5,
+    width: 1000,
+    height: 5,
+    color: "blue"
+  }
+
+  const leftWall = {
+    x: 0,
+    y: 0,
+    width: 5,
+    height: 500,
+    color: "yellow"
+  }
+
+  const rightWall = {
+    x: 1000,
+    y: 0,
+    width: 5,
+    height: 500,
+    color: "yellow"
+  }
+
+  //At "Play", init ball with random speed and direction
   useEffect(() => {
-    const rx = Math.random() > 0.5 ? 20 : -20     //Or 20, or -20 (don't go straight up/down)
+    const rx = Math.random() > 0.5 ? 30 : -30     //Or 20, or -20 (don't go straight up/down)
     const ry = Math.random() > 0.5
       ? (Math.random() * (50 - 5) + 5)            //Or between 50 to 5,
       : (Math.random() * ((-5) - (-50)) + (-5))   //or between -5 to -50 (don't go straight left/right)
     // const ry = 5
-    if (
-      !isPaused && 
-      ball.vX == 0 && 
-      ball.vY == 0
-    ) {
+    if (!isPaused) {
       setBall({
         ...ball,
-        vX: rx,
-        vY: ry
+        dx: rx,
+        dy: ry
       })
     }
   }, [isPaused])
 
   //Each time the ball moves, wait a time interval and change the ball position again
   useEffect(() => {
+
+    //Paddle kick: change ball's horizontal direction
+    if ((isColliding(ball, p1) && ball.dx! < 0) ||
+        (isColliding(ball, p2) && ball.dx! > 0)) {
+      setBall({...ball, dx: -ball.dx!})
+    }
+
+    //Wall kick: change ball's vertical direction
+    if ((isColliding(ball, upperWall) && ball.dy! < 0) ||
+        (isColliding(ball, lowerWall) && ball.dy! > 0)) {
+      setBall({...ball, dy: -ball.dy!})
+    }
+
     const interval = setInterval(() => {
-      moveBall(ball.vX!, ball.vY!)
-    }, 200) //ms
+      moveBall(ball.dx!, ball.dy!)
+    }, 150) //ms
     return () => clearInterval(interval)
   }, [ball, isPaused])
 
@@ -138,7 +179,7 @@ function App() {
       {/* Ball */}
       <div style={{
         position: "absolute",
-        transition: "0.5s",
+        transition: "0.35s",
         top: ball.y, 
         left: ball.x, 
         width: ball.width, 
@@ -149,7 +190,7 @@ function App() {
       {/* Player 1 */}
       <div style={{
         position: "absolute",
-        transition: "0.5s",
+        transition: "0.35s",
         top: p1.y, 
         left: p1.x, 
         width: p1.width, 
@@ -160,12 +201,56 @@ function App() {
       {/* Player 2 */}
       <div style={{
         position: "absolute",
-        transition: "0.5s",
+        transition: "0.35s",
         top: p2.y, 
         left: p2.x, 
         width: p2.width, 
         height: p2.height, 
         background: p2.color
+      }}></div>
+
+      {/* Upper Wall */}
+      <div style={{
+        position: "absolute",
+        transition: "0.35s",
+        top: upperWall.y, 
+        left: upperWall.x, 
+        width: upperWall.width, 
+        height: upperWall.height, 
+        background: upperWall.color
+      }}></div>
+
+      {/* Lower Wall */}
+      <div style={{
+        position: "absolute",
+        transition: "0.35s",
+        top: lowerWall.y, 
+        left: lowerWall.x, 
+        width: lowerWall.width, 
+        height: lowerWall.height, 
+        background: lowerWall.color
+      }}></div>
+
+      {/* Left Wall */}
+      <div style={{
+        position: "absolute",
+        transition: "0.35s",
+        top: leftWall.y, 
+        left: leftWall.x, 
+        width: leftWall.width, 
+        height: leftWall.height, 
+        background: leftWall.color
+      }}></div>
+
+      {/* Right Wall */}
+      <div style={{
+        position: "absolute",
+        transition: "0.35s",
+        top: rightWall.y, 
+        left: rightWall.x, 
+        width: rightWall.width, 
+        height: rightWall.height, 
+        background: rightWall.color
       }}></div>
 
     </>
