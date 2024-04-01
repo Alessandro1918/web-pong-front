@@ -1,6 +1,8 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+// import reactLogo from './assets/react.svg'
+// import viteLogo from '/vite.svg'
 import './App.css'
 
 type RectangleProps = {
@@ -13,11 +15,29 @@ type RectangleProps = {
   color: string
 }
 
+type ScoreProps = {
+  p1: number,     //4
+  p2: number      //2
+}
+
+type ConnectionStatusProps = {
+  p1: boolean,    //connected
+  p2: boolean     //not connected
+}
+
 function App() {
 
-  const [count, setCount] = useState(0)
-
   const [ isPaused, setIsPaused ] = useState(true)
+
+  const [ score, setScore ] = useState<ScoreProps>({
+    p1: 0,
+    p2: 0
+  })
+
+  const [ connectionStatus, setConnectionStatus ] = useState<ConnectionStatusProps>({
+    p1: false,
+    p2: true
+  })
 
   const [ball, setBall] = useState<RectangleProps>({
     x: 150,
@@ -83,7 +103,6 @@ function App() {
     const ry = Math.random() > 0.5
       ? (Math.random() * (50 - 5) + 5)            //Or between 50 to 5,
       : (Math.random() * ((-5) - (-50)) + (-5))   //or between -5 to -50 (don't go straight left/right)
-    // const ry = 5
     if (!isPaused) {
       setBall({
         ...ball,
@@ -142,39 +161,30 @@ function App() {
     )
   }
 
+  //Returns a string with a certain number of non-breaking space characters
+  function space(nSpaces: number) {
+    let s = ''
+    for (let i = 0; i< nSpaces; i++) {
+      s = s + "\xA0"
+    }
+    return s
+  }
+
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      {/* Header */}
+      <div className="header">
+        <h1>{
+          `${score.p1} ${space(10)} ${score.p2}`}
+        </h1>
+        <h3>{
+          `${connectionStatus.p1 ? space(21) : "[OFFLINE]"}
+           ${space(10)}
+           ${connectionStatus.p2 ? space(21) : "[OFFLINE]"}`}
+        </h3>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
 
-        <button onClick={() => moveBall(0, -10)}>Up</button>
-        <button onClick={() => moveBall(0, 10)}>Down</button>
-        <button onClick={() => moveBall(-10, 0)}>Left</button>
-        <button onClick={() => moveBall(10, 0)}>Right</button>
-
-        <button onClick={() => setIsPaused(!isPaused)}>Play/Pause</button>
-
-        <button onClick={() => movePlayer("P1", Math.random() * 500)}>Move P1</button>
-        <button onClick={() => movePlayer("P2", Math.random() * 500)}>Move P2</button>
-
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <div className="vertical_dotted_line"></div>
 
       {/* Ball */}
       <div style={{
@@ -253,6 +263,15 @@ function App() {
         background: rightWall.color
       }}></div>
 
+      <button onClick={() => moveBall(0, -10)}>Up</button>
+      <button onClick={() => moveBall(0, 10)}>Down</button>
+      <button onClick={() => moveBall(-10, 0)}>Left</button>
+      <button onClick={() => moveBall(10, 0)}>Right</button>
+
+      <button onClick={() => setIsPaused(!isPaused)}>Play/Pause</button>
+
+      <button onClick={() => movePlayer("P1", Math.random() * 500)}>Move P1</button>
+      <button onClick={() => movePlayer("P2", Math.random() * 500)}>Move P2</button>
     </>
   )
 }
