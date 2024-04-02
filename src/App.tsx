@@ -27,6 +27,12 @@ type ConnectionStatusProps = {
 
 function App() {
 
+  const screen = {
+    width: window.innerWidth,
+    // height: window.innerHeight     //Desktops can't hide toolbar (url address bar)
+    height: window.screen.height      //Mobile browsers can
+  }
+
   const [ isPaused, setIsPaused ] = useState(true)
 
   const [ score, setScore ] = useState<ScoreProps>({
@@ -40,43 +46,43 @@ function App() {
   })
 
   const [ball, setBall] = useState<RectangleProps>({
-    x: 150,
+    x: 400,
     y: 100,
     dx: 0,
     dy: 0,
-    width: 50,
-    height: 50,
+    width: screen.height / 10,
+    height: screen.height / 10,
     color: "orange"
   })
 
   const [p1, setP1] = useState<RectangleProps>({
-    x: 50,
-    y: 100,
-    width: 50,
-    height: 200,
+    x: 0,
+    y: screen.height / 10 * 4,  //middle of Y axis
+    width: screen.height / 10,  //half of paddle height
+    height: screen.height / 5,  //20% of screen height
     color: "green"
   })
 
   const [p2, setP2] = useState<RectangleProps>({
-    x: 300,
-    y: 130,
-    width: 50,
-    height: 200,
+    x: screen.width - screen.height / 10,
+    y: screen.height / 10 * 4,
+    width: screen.height / 10,
+    height: screen.height / 5,
     color: "red"
   })
 
   const upperWall = {
     x: 0,
     y: 0,
-    width: 1000,
+    width: screen.width,
     height: 5,
     color: "blue"
   }
 
   const lowerWall = {
     x: 0,
-    y: 500 - 5,
-    width: 1000,
+    y: screen.height - 5,
+    width: screen.width,
     height: 5,
     color: "blue"
   }
@@ -85,15 +91,15 @@ function App() {
     x: 0,
     y: 0,
     width: 5,
-    height: 500,
+    height: screen.height,
     color: "yellow"
   }
 
   const rightWall = {
-    x: 1000,
+    x: screen.width - 5,
     y: 0,
     width: 5,
-    height: 500,
+    height: screen.height,
     color: "yellow"
   }
 
@@ -125,6 +131,18 @@ function App() {
     if ((isColliding(ball, upperWall) && ball.dy! < 0) ||
         (isColliding(ball, lowerWall) && ball.dy! > 0)) {
       setBall({...ball, dy: -ball.dy!})
+    }
+
+    //P1 scored
+    if (isColliding(ball, rightWall)) {
+      setIsPaused(true)
+      //TODO: score, reset ball
+    }
+
+    //P2 scored
+    if (isColliding(ball, leftWall)) {
+      setIsPaused(true)
+      //TODO: score, reset ball
     }
 
     const interval = setInterval(() => {
