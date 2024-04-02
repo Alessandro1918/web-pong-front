@@ -1,75 +1,153 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+// import reactLogo from './assets/react.svg'
+// import viteLogo from '/vite.svg'
 import './App.css'
 
 type RectangleProps = {
-  x: number,
-  y: number,
-  vX?: number,
-  vY?: number,
+  x: number,      //pos at X axis 
+  y: number,      //pos at Y axis
+  dx?: number,    //speed at X axis
+  dy?: number,    //spreed at Y axis
   width: number,
   height: number,
   color: string
 }
 
+type ScoreProps = {
+  p1: number,     //4
+  p2: number      //2
+}
+
+type ConnectionStatusProps = {
+  p1: boolean,    //connected
+  p2: boolean     //not connected
+}
+
 function App() {
 
-  const [count, setCount] = useState(0)
+  const screen = {
+    width: window.innerWidth,
+    // height: window.innerHeight     //Desktops can't hide toolbar (url address bar)
+    height: window.screen.height      //Mobile browsers can
+  }
 
   const [ isPaused, setIsPaused ] = useState(true)
 
+  const [ score, setScore ] = useState<ScoreProps>({
+    p1: 0,
+    p2: 0
+  })
+
+  const [ connectionStatus, setConnectionStatus ] = useState<ConnectionStatusProps>({
+    p1: false,
+    p2: true
+  })
+
   const [ball, setBall] = useState<RectangleProps>({
-    x: 150,
+    x: 400,
     y: 100,
-    vX: 0,
-    vY: 0,
-    width: 50,
-    height: 50,
+    dx: 0,
+    dy: 0,
+    width: screen.height / 10,
+    height: screen.height / 10,
     color: "orange"
   })
 
   const [p1, setP1] = useState<RectangleProps>({
-    x: 50,
-    y: 100,
-    width: 50,
-    height: 200,
+    x: 0,
+    y: screen.height / 10 * 4,  //middle of Y axis
+    width: screen.height / 10,  //half of paddle height
+    height: screen.height / 5,  //20% of screen height
     color: "green"
   })
 
   const [p2, setP2] = useState<RectangleProps>({
-    x: 300,
-    y: 130,
-    width: 50,
-    height: 200,
+    x: screen.width - screen.height / 10,
+    y: screen.height / 10 * 4,
+    width: screen.height / 10,
+    height: screen.height / 5,
     color: "red"
   })
 
-  //At "Play", init ball with random velocity
+  const upperWall = {
+    x: 0,
+    y: 0,
+    width: screen.width,
+    height: 5,
+    color: "blue"
+  }
+
+  const lowerWall = {
+    x: 0,
+    y: screen.height - 5,
+    width: screen.width,
+    height: 5,
+    color: "blue"
+  }
+
+  const leftWall = {
+    x: 0,
+    y: 0,
+    width: 5,
+    height: screen.height,
+    color: "yellow"
+  }
+
+  const rightWall = {
+    x: screen.width - 5,
+    y: 0,
+    width: 5,
+    height: screen.height,
+    color: "yellow"
+  }
+
+  //At "Play", init ball with random speed and direction
   useEffect(() => {
-    const rx = Math.random() > 0.5 ? 20 : -20     //Or 20, or -20 (don't go straight up/down)
+    const rx = Math.random() > 0.5 ? 30 : -30     //Or 20, or -20 (don't go straight up/down)
     const ry = Math.random() > 0.5
       ? (Math.random() * (50 - 5) + 5)            //Or between 50 to 5,
       : (Math.random() * ((-5) - (-50)) + (-5))   //or between -5 to -50 (don't go straight left/right)
-    // const ry = 5
-    if (
-      !isPaused && 
-      ball.vX == 0 && 
-      ball.vY == 0
-    ) {
+    if (!isPaused) {
       setBall({
         ...ball,
-        vX: rx,
-        vY: ry
+        dx: rx,
+        dy: ry
       })
     }
   }, [isPaused])
 
   //Each time the ball moves, wait a time interval and change the ball position again
   useEffect(() => {
+
+    //Paddle kick: change ball's horizontal direction
+    if ((isColliding(ball, p1) && ball.dx! < 0) ||
+        (isColliding(ball, p2) && ball.dx! > 0)) {
+      setBall({...ball, dx: -ball.dx!})
+    }
+
+    //Wall kick: change ball's vertical direction
+    if ((isColliding(ball, upperWall) && ball.dy! < 0) ||
+        (isColliding(ball, lowerWall) && ball.dy! > 0)) {
+      setBall({...ball, dy: -ball.dy!})
+    }
+
+    //P1 scored
+    if (isColliding(ball, rightWall)) {
+      setIsPaused(true)
+      //TODO: score, reset ball
+    }
+
+    //P2 scored
+    if (isColliding(ball, leftWall)) {
+      setIsPaused(true)
+      //TODO: score, reset ball
+    }
+
     const interval = setInterval(() => {
-      moveBall(ball.vX!, ball.vY!)
-    }, 200) //ms
+      moveBall(ball.dx!, ball.dy!)
+    }, 150) //ms
     return () => clearInterval(interval)
   }, [ball, isPaused])
 
@@ -101,44 +179,35 @@ function App() {
     )
   }
 
+  //Returns a string with a certain number of non-breaking space characters
+  function space(nSpaces: number) {
+    let s = ''
+    for (let i = 0; i< nSpaces; i++) {
+      s = s + "\xA0"
+    }
+    return s
+  }
+
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      {/* Header */}
+      <div className="header">
+        <h1>{
+          `${score.p1} ${space(10)} ${score.p2}`}
+        </h1>
+        <h3>{
+          `${connectionStatus.p1 ? space(21) : "[OFFLINE]"}
+           ${space(10)}
+           ${connectionStatus.p2 ? space(21) : "[OFFLINE]"}`}
+        </h3>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
 
-        <button onClick={() => moveBall(0, -10)}>Up</button>
-        <button onClick={() => moveBall(0, 10)}>Down</button>
-        <button onClick={() => moveBall(-10, 0)}>Left</button>
-        <button onClick={() => moveBall(10, 0)}>Right</button>
-
-        <button onClick={() => setIsPaused(!isPaused)}>Play/Pause</button>
-
-        <button onClick={() => movePlayer("P1", Math.random() * 500)}>Move P1</button>
-        <button onClick={() => movePlayer("P2", Math.random() * 500)}>Move P2</button>
-
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <div className="vertical_dotted_line"></div>
 
       {/* Ball */}
       <div style={{
         position: "absolute",
-        transition: "0.5s",
+        transition: "0.35s",
         top: ball.y, 
         left: ball.x, 
         width: ball.width, 
@@ -149,7 +218,7 @@ function App() {
       {/* Player 1 */}
       <div style={{
         position: "absolute",
-        transition: "0.5s",
+        transition: "0.35s",
         top: p1.y, 
         left: p1.x, 
         width: p1.width, 
@@ -160,7 +229,7 @@ function App() {
       {/* Player 2 */}
       <div style={{
         position: "absolute",
-        transition: "0.5s",
+        transition: "0.35s",
         top: p2.y, 
         left: p2.x, 
         width: p2.width, 
@@ -168,6 +237,59 @@ function App() {
         background: p2.color
       }}></div>
 
+      {/* Upper Wall */}
+      <div style={{
+        position: "absolute",
+        transition: "0.35s",
+        top: upperWall.y, 
+        left: upperWall.x, 
+        width: upperWall.width, 
+        height: upperWall.height, 
+        background: upperWall.color
+      }}></div>
+
+      {/* Lower Wall */}
+      <div style={{
+        position: "absolute",
+        transition: "0.35s",
+        top: lowerWall.y, 
+        left: lowerWall.x, 
+        width: lowerWall.width, 
+        height: lowerWall.height, 
+        background: lowerWall.color
+      }}></div>
+
+      {/* Left Wall */}
+      <div style={{
+        position: "absolute",
+        transition: "0.35s",
+        top: leftWall.y, 
+        left: leftWall.x, 
+        width: leftWall.width, 
+        height: leftWall.height, 
+        background: leftWall.color
+      }}></div>
+
+      {/* Right Wall */}
+      <div style={{
+        position: "absolute",
+        transition: "0.35s",
+        top: rightWall.y, 
+        left: rightWall.x, 
+        width: rightWall.width, 
+        height: rightWall.height, 
+        background: rightWall.color
+      }}></div>
+
+      <button onClick={() => moveBall(0, -10)}>Up</button>
+      <button onClick={() => moveBall(0, 10)}>Down</button>
+      <button onClick={() => moveBall(-10, 0)}>Left</button>
+      <button onClick={() => moveBall(10, 0)}>Right</button>
+
+      <button onClick={() => setIsPaused(!isPaused)}>Play/Pause</button>
+
+      <button onClick={() => movePlayer("P1", Math.random() * 500)}>Move P1</button>
+      <button onClick={() => movePlayer("P2", Math.random() * 500)}>Move P2</button>
     </>
   )
 }
