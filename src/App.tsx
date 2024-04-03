@@ -25,6 +25,12 @@ type ConnectionStatusProps = {
   p2: boolean     //not connected
 }
 
+type ScreenOrientationProps = {
+  alpha: number | null,
+  beta: number | null,
+  gamma: number | null
+}
+
 function App() {
 
   const screen = {
@@ -32,6 +38,12 @@ function App() {
     // height: window.innerHeight     //Desktops can't hide toolbar (url address bar)
     height: window.screen.height      //Mobile browsers can
   }
+
+  const [ orientation, setOrientation ] = useState<ScreenOrientationProps>({
+    alpha: 0,
+    beta: 1,
+    gamma: 2
+  })
 
   const [ isPaused, setIsPaused ] = useState(true)
 
@@ -157,6 +169,20 @@ function App() {
     setCountdown(3)
   }, [score])
 
+  window.addEventListener("deviceorientation", (event: DeviceOrientationEvent) => {    
+    const alpha = event.alpha;  
+    const beta = event.beta;
+    const gamma = event.gamma;
+  
+    console.log(alpha, beta, gamma)
+  
+    setOrientation({
+      alpha,
+      beta, 
+      gamma
+    })
+  })
+
   //Init ball with random speed and direction
   function startBall() {
     if (
@@ -222,6 +248,14 @@ function App() {
           {`${connectionStatus.p1 ? space(21) : "[OFFLINE]"}
             ${space(10)}
             ${connectionStatus.p2 ? space(21) : "[OFFLINE]"}`}
+        </h3>
+
+        <h3>
+          {`${orientation.alpha}
+            ${space(10)}
+            ${orientation.beta}
+            ${space(10)}
+            ${orientation.gamma}`}
         </h3>
 
         {
