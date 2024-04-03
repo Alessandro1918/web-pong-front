@@ -50,15 +50,15 @@ function App() {
   })
 
   const [ connectionStatus ] = useState<ConnectionStatusProps>({
-    p1: false,
+    p1: true,
     p2: true
   })
 
   const [ countdown, setCountdown ] = useState(3)
 
   const initialBall = {
-    x: 400,
-    y: 300,
+    x: screen.width / 2 - (screen.height / 10 / 2), //middle of screen
+    y: screen.height / 2 - (screen.height / 10 / 2), //middle of screen,
     dx: 0,
     dy: 0,
     width: screen.height / 10,
@@ -253,15 +253,11 @@ function App() {
             ${connectionStatus.p2 ? space(21) : "[OFFLINE]"}`}
         </h3>
 
-        <h3>
-          {`${screen.angleZ}
-            ${space(10)}
-            ${p1.y}`}
-        </h3>
-
         {
           countdown > 0 &&
-          <h1>{`${space(1)} ${countdown}`}</h1>
+          <h1 className="countdown">
+            {countdown}
+          </h1>
         }
       </div>
 
@@ -344,7 +340,7 @@ function App() {
         background: rightWall.color
       }}></div>
 
-      <div style={{marginTop: "256px"}}>
+      <div style={{marginTop: screen.height * 0.8}}>
         <button onClick={() => setIsPaused(!isPaused)}>Play/Pause</button>
         <button onClick={() => movePlayer("P1", Math.random() * 500)}>Move P1</button>
         <button onClick={() => movePlayer("P2", Math.random() * 500)}>Move P2</button>
