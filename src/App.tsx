@@ -40,7 +40,7 @@ function App() {
     p2: 0
   })
 
-  const [ connectionStatus, setConnectionStatus ] = useState<ConnectionStatusProps>({
+  const [ connectionStatus ] = useState<ConnectionStatusProps>({
     p1: false,
     p2: true
   })
@@ -49,7 +49,7 @@ function App() {
 
   const initialBall = {
     x: 400,
-    y: 200,
+    y: 300,
     dx: 0,
     dy: 0,
     width: screen.height / 10,
@@ -309,10 +309,11 @@ function App() {
         background: rightWall.color
       }}></div>
 
-      <button onClick={() => setIsPaused(!isPaused)}>Play/Pause</button>
-
-      <button onClick={() => movePlayer("P1", Math.random() * 500)}>Move P1</button>
-      <button onClick={() => movePlayer("P2", Math.random() * 500)}>Move P2</button>
+      <div style={{marginTop: "256px"}}>
+        <button onClick={() => setIsPaused(!isPaused)}>Play/Pause</button>
+        <button onClick={() => movePlayer("P1", Math.random() * 500)}>Move P1</button>
+        <button onClick={() => movePlayer("P2", Math.random() * 500)}>Move P2</button>
+      </div>
     </>
   )
 }
