@@ -25,13 +25,22 @@ type ConnectionStatusProps = {
   p2: boolean     //not connected
 }
 
+type ScreenProps = {
+  width: number
+  height: number,
+  // angleX: number | null,
+  // angleY: number | null,
+  angleZ: number | null
+}
+
 function App() {
 
-  const screen = {
+  const [ screen, setScreen ] = useState<ScreenProps>({
     width: window.innerWidth,
     // height: window.innerHeight     //Desktops can't hide toolbar (url address bar)
-    height: window.screen.height      //Mobile browsers can
-  }
+    height: window.screen.height,     //Mobile browsers can
+    angleZ: 45
+  })
 
   const [ isPaused, setIsPaused ] = useState(true)
 
@@ -41,15 +50,15 @@ function App() {
   })
 
   const [ connectionStatus ] = useState<ConnectionStatusProps>({
-    p1: false,
+    p1: true,
     p2: true
   })
 
   const [ countdown, setCountdown ] = useState(3)
 
   const initialBall = {
-    x: 400,
-    y: 300,
+    x: screen.width / 2 - (screen.height / 10 / 2), //middle of screen
+    y: screen.height / 2 - (screen.height / 10 / 2), //middle of screen,
     dx: 0,
     dy: 0,
     width: screen.height / 10,
@@ -157,6 +166,26 @@ function App() {
     setCountdown(3)
   }, [score])
 
+  //Read device orientation
+  //https://developer.mozilla.org/en-US/docs/Web/API/Device_orientation_events/Detecting_device_orientation
+  window.addEventListener("deviceorientation", (event: DeviceOrientationEvent) => {    
+    // const alpha = event.alpha;  
+    // const beta = event.beta;
+    const gamma = event.gamma;    //In degrees, in the range [ -90, 90 )
+    setScreen({
+      ...screen,
+      // angleX: alpha,
+      // angleY: beta,
+      angleZ: gamma
+    })
+    const abs = Math.abs(screen.angleZ!) * 1.0 / 90  //[ -90, 90 ] -> [ 0, 90 ] -> [ 0.000, 1.000 ]
+    const playerMinY = 0
+    const playerMaxY = screen.height - p1.height
+    const posY = Math.round(abs * (playerMaxY - playerMinY))
+    setP1({...p1, y: posY})
+    setP2({...p2, y: posY})
+  })
+
   //Init ball with random speed and direction
   function startBall() {
     if (
@@ -226,7 +255,9 @@ function App() {
 
         {
           countdown > 0 &&
-          <h1>{`${space(1)} ${countdown}`}</h1>
+          <h1 className="countdown">
+            {countdown}
+          </h1>
         }
       </div>
 
@@ -309,7 +340,7 @@ function App() {
         background: rightWall.color
       }}></div>
 
-      <div style={{marginTop: "256px"}}>
+      <div style={{marginTop: screen.height * 0.8}}>
         <button onClick={() => setIsPaused(!isPaused)}>Play/Pause</button>
         <button onClick={() => movePlayer("P1", Math.random() * 500)}>Move P1</button>
         <button onClick={() => movePlayer("P2", Math.random() * 500)}>Move P2</button>
