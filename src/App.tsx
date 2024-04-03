@@ -25,24 +25,21 @@ type ConnectionStatusProps = {
   p2: boolean     //not connected
 }
 
-type ScreenOrientationProps = {
-  alpha: number | null,
-  beta: number | null,
-  gamma: number | null
+type ScreenProps = {
+  width: number
+  height: number,
+  // angleX: number | null,
+  // angleY: number | null,
+  angleZ: number | null
 }
 
 function App() {
 
-  const screen = {
+  const [ screen, setScreen ] = useState<ScreenProps>({
     width: window.innerWidth,
     // height: window.innerHeight     //Desktops can't hide toolbar (url address bar)
-    height: window.screen.height      //Mobile browsers can
-  }
-
-  const [ orientation, setOrientation ] = useState<ScreenOrientationProps>({
-    alpha: 0,
-    beta: 1,
-    gamma: 2
+    height: window.screen.height,     //Mobile browsers can
+    angleZ: 45
   })
 
   const [ isPaused, setIsPaused ] = useState(true)
@@ -169,18 +166,24 @@ function App() {
     setCountdown(3)
   }, [score])
 
+  //Read device orientation
+  //https://developer.mozilla.org/en-US/docs/Web/API/Device_orientation_events/Detecting_device_orientation
   window.addEventListener("deviceorientation", (event: DeviceOrientationEvent) => {    
-    const alpha = event.alpha;  
-    const beta = event.beta;
-    const gamma = event.gamma;
-  
-    console.log(alpha, beta, gamma)
-  
-    setOrientation({
-      alpha,
-      beta, 
-      gamma
+    // const alpha = event.alpha;  
+    // const beta = event.beta;
+    const gamma = event.gamma;    //In degrees, in the range [ -90, 90 )
+    setScreen({
+      ...screen,
+      // angleX: alpha,
+      // angleY: beta,
+      angleZ: gamma
     })
+    const abs = Math.abs(screen.angleZ!) * 1.0 / 90  //[ -90, 90 ] -> [ 0, 90 ] -> [ 0.000, 1.000 ]
+    const playerMinY = 0
+    const playerMaxY = screen.height - p1.height
+    const posY = Math.round(abs * (playerMaxY - playerMinY))
+    setP1({...p1, y: posY})
+    setP2({...p2, y: posY})
   })
 
   //Init ball with random speed and direction
@@ -251,11 +254,9 @@ function App() {
         </h3>
 
         <h3>
-          {`${orientation.alpha}
+          {`${screen.angleZ}
             ${space(10)}
-            ${orientation.beta}
-            ${space(10)}
-            ${orientation.gamma}`}
+            ${p1.y}`}
         </h3>
 
         {
